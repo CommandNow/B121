@@ -144,56 +144,68 @@
   </script>
 </head>
 <body>
+<h1>Burger Paname - Étapes de commande</h1>
+<div id="loading">Chargement du menu...</div>
+<div id="error">Erreur de connexion au menu. Données locales affichées.</div>
 
-
-  <h1>Burger Paname - V5.6</h1>
-  <div id="loading">Chargement du menu...</div>
-  <div id="error">Erreur de connexion au menu. Données locales affichées.</div>
-  <div class="step">
-    <div class="section">
-      <h2 id="label-burger"></h2>
-      <select id="burger"></select>
-      <button onclick="addToCart('burger')">Ajouter au panier</button>
-    </div>
-    <div class="section">
-      <h2 id="label-drink"></h2>
-      <select id="drink"></select>
-      <button onclick="addToCart('drink')">Ajouter au panier</button>
-    </div>
-    <div class="section">
-      <h2 id="label-fries"></h2>
-      <select id="fries"></select>
-      <button onclick="addToCart('fries')">Ajouter au panier</button>
-    </div>
-    <div class="section">
-      <h2 id="label-crudites"></h2>
-      <select id="crudites"></select>
-      <button onclick="addToCart('crudites')">Ajouter au panier</button>
-    </div>
-    <div class="section">
-      <h2 id="label-dessert"></h2>
-      <select id="dessert"></select>
-      <button onclick="addToCart('dessert')">Ajouter au panier</button>
-    </div>
-
-    
-<h2>Commande en cours</h2>
-<div id="currentOrder"></div>
-<button onclick="validateOrder()">Ajouter comme nouvelle commande</button>
-
-<h2>Commandes validées</h2>
-<div id="cart"></div>
-
-<h2>Finalisation</h2>
-<input type="text" id="clientName" placeholder="Votre prénom" />
-<button onclick="sendOrder()">Envoyer sur WhatsApp</button>
-
+<div class="step">
+  <div class="menu-step" id="menu1">
+    <h2 id="label-burger"></h2>
+    <select id="burger"></select>
+    <button onclick="addToCart('burger')">Ajouter</button>
+    <button onclick="validateOrder('menu2')">Valider le Menu 1</button>
   </div>
+
+  <div class="menu-step" id="menu2" style="display:none">
+    <h2 id="label-drink"></h2>
+    <select id="drink"></select>
+    <button onclick="addToCart('drink')">Ajouter</button>
+    <button onclick="validateOrder('menu3')">Valider le Menu 2</button>
+  </div>
+
+  <div class="menu-step" id="menu3" style="display:none">
+    <h2 id="label-fries"></h2>
+    <select id="fries"></select>
+    <button onclick="addToCart('fries')">Ajouter</button>
+    <button onclick="validateOrder('menu4')">Valider le Menu 3</button>
+  </div>
+
+  <div class="menu-step" id="menu4" style="display:none">
+    <h2 id="label-crudites"></h2>
+    <select id="crudites"></select>
+    <button onclick="addToCart('crudites')">Ajouter</button>
+    <button onclick="validateOrder('menu5')">Valider le Menu 4</button>
+  </div>
+
+  <div class="menu-step" id="menu5" style="display:none">
+    <h2 id="label-dessert"></h2>
+    <select id="dessert"></select>
+    <button onclick="addToCart('dessert')">Ajouter</button>
+    <button onclick="validateOrder()">Valider le Menu 5</button>
+  </div>
+
+  <div class="section">
+    <h2>Commande en cours</h2>
+    <div id="currentOrder"></div>
+
+    <h2>Commandes validées</h2>
+    <div id="cart"></div>
+
+    <h2>Finalisation</h2>
+    <input type="text" id="clientName" placeholder="Votre prénom" />
+    <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+  </div>
+</div>
 
 <script>
 let cart = [];
 let currentOrder = [];
 let orderNumber = 1;
+
+function showStep(stepId) {
+  document.querySelectorAll('.menu-step').forEach(div => div.style.display = 'none');
+  document.getElementById(stepId).style.display = 'block';
+}
 
 function addToCart(selectId) {
   const selected = document.getElementById(selectId);
@@ -230,7 +242,7 @@ function changeQty(index, delta) {
   updateCurrentOrder();
 }
 
-function validateOrder() {
+function validateOrder(nextStepId) {
   if (currentOrder.length === 0) {
     alert("Ajoutez des articles à la commande.");
     return;
@@ -239,13 +251,14 @@ function validateOrder() {
   currentOrder = [];
   updateCurrentOrder();
   updateCart();
+  if (nextStepId) showStep(nextStepId);
 }
 
 function updateCart() {
   const container = document.getElementById("cart");
   container.innerHTML = "";
   cart.forEach(order => {
-    container.innerHTML += `<h3 style="margin-top: 20px;">Commande ${order.orderNumber}</h3>`;
+    container.innerHTML += `<h3 style="margin-top: 20px;">Commande #${String(order.orderNumber).padStart(3, "0")}</h3>`;
     order.items.forEach(item => {
       container.innerHTML += `<div class="cart-item">${item.name} x${item.quantity}</div>`;
     });
@@ -261,7 +274,7 @@ function sendOrder() {
 
   let message = `Commande pour ${name} - Burger Paname :%0A`;
   cart.forEach(order => {
-    message += `Commande ${order.orderNumber}:%0A`;
+    message += `Commande #${String(order.orderNumber).padStart(3, "0")}:%0A`;
     order.items.forEach(item => {
       message += `- ${item.name} x${item.quantity}%0A`;
     });
@@ -271,7 +284,15 @@ function sendOrder() {
   const phone = "33616550952";
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 }
-</script>
 
+window.onload = () => {
+  const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
+  loadOptions(sheetId, "Burgers", "burger", "label-burger", []);
+  loadOptions(sheetId, "Boissons", "drink", "label-drink", []);
+  loadOptions(sheetId, "Accompagnements", "fries", "label-fries", []);
+  loadOptions(sheetId, "Crudités", "crudites", "label-crudites", []);
+  loadOptions(sheetId, "Desserts", "dessert", "label-dessert", []);
+};
+</script>
 </body>
 </html>
