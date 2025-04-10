@@ -79,12 +79,14 @@
         cart.push({ name: itemName, quantity: 1 });
       }
       updateCart();
+  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
     }
 
     function changeQty(index, delta) {
       cart[index].quantity += delta;
       if (cart[index].quantity <= 0) cart.splice(index, 1);
       updateCart();
+  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
     }
 
     
@@ -138,6 +140,7 @@ function resetAll() {
     orderNumber = 1;
     updateCurrentOrder();
     updateCart();
+  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
     document.getElementById("clientName").value = "";
     alert("Commandes réinitialisées.");
   }
@@ -184,6 +187,7 @@ function resetAll() {
     <select id="dessert"></select>
     <button onclick="addToCart('dessert')">Ajouter</button>
     <button onclick="validateOrder()">Valider le Menu 5</button>
+    <p id="confirmation" style="display:none; color:green; font-weight:bold; text-align:center;">Commande validée !</p>
   </div>
 
   <div class="section">
@@ -254,6 +258,7 @@ function validateOrder(nextStepId) {
   currentOrder = [];
   updateCurrentOrder();
   updateCart();
+  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
   if (nextStepId) showStep(nextStepId);
 }
 
@@ -308,6 +313,7 @@ function resetAll() {
     orderNumber = 1;
     updateCurrentOrder();
     updateCart();
+  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
     document.getElementById("clientName").value = "";
     alert("Commandes réinitialisées.");
   }
