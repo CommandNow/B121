@@ -44,7 +44,9 @@
     <div class="section">
       <h2>Finalisation</h2>
       <input type="text" id="clientName" placeholder="Votre prénom" />
+    <p id="nameError" style="color:red; text-align:center; display:none;">Merci d’entrer un prénom valide (au moins 2 lettres).</p>
       <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+    <p id="cartError" style="color:red; text-align:center; display:none;">Merci de valider au moins une commande avant d’envoyer.</p>
       <button onclick="resetAll()">Réinitialiser les commandes</button>
     </div>
   </div>
@@ -115,11 +117,19 @@ function updateCart() {
 }
 
 function sendOrder() {
+  if (cart.length === 0) {
+    document.getElementById("cartError").style.display = "block";
+    return;
+  } else {
+    document.getElementById("cartError").style.display = "none";
+  }
   const name = document.getElementById("clientName").value;
   if (!name || name.length < 2) {
-    alert("Merci d’entrer un prénom valide (au moins 2 lettres).");
+    document.getElementById("nameError").style.display = "block";
+    // Erreur visible affichée
     return;
   }
+  document.getElementById("nameError").style.display = "none";
   let message = `Commande pour ${name} - Burger Paname :%0A`;
   let total = 0;
   cart.forEach(order => {
