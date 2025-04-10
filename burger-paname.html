@@ -3,10 +3,10 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Burger Paname V5.6</title>
+  <title>Burger Paname V5.6 - Total</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f5f0; padding: 20px; color: #333; }
-    h1, h2 { text-align: center; }
+    h1, h2, h3 { text-align: center; }
     .step { max-width: 600px; margin: 0 auto; }
     .section { margin-top: 30px; }
     select, input[type="text"], button {
@@ -14,211 +14,50 @@
     }
     .cart-item { display: flex; justify-content: space-between; padding: 5px 0; }
     .cart-item button { padding: 0 8px; }
-    option[disabled] { color: gray; }
-    #loading { text-align: center; font-size: 18px; padding: 20px; display: none; }
-    #error { color: red; text-align: center; display: none; }
   </style>
-  <script>
-    let cart = [];
-
-    async function loadOptions(sheetId, tabName, selectId, labelId, fallbackItems) {
-      const url = `https://opensheet.elk.sh/${sheetId}/${tabName}`;
-      const select = document.getElementById(selectId);
-      const label = document.getElementById(labelId);
-      const loading = document.getElementById("loading");
-      const error = document.getElementById("error");
-
-      select.innerHTML = "";
-      loading.style.display = "block";
-      label.textContent = tabName;
-
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        loading.style.display = "none";
-
-        const noneOption = document.createElement("option");
-        noneOption.textContent = "Aucun";
-        noneOption.value = "Aucun";
-        select.appendChild(noneOption);
-
-        data.forEach(item => {
-          const option = document.createElement("option");
-          option.value = item.Nom;
-          if (parseInt(item.Stock) === 0) {
-            option.textContent = `${item.Nom} - ${item.Prix}€ (rupture)`;
-            option.disabled = true;
-          } else {
-            option.textContent = `${item.Nom} - ${item.Prix}€`;
-          }
-          select.appendChild(option);
-        });
-
-      } catch (e) {
-        console.error(e);
-        loading.style.display = "none";
-        error.style.display = "block";
-        fallbackItems.forEach(item => {
-          const option = document.createElement("option");
-          option.value = item.nom;
-          option.textContent = `${item.nom} - ${item.prix}€${item.stock === 0 ? " (rupture)" : ""}`;
-          option.disabled = item.stock === 0;
-          select.appendChild(option);
-        });
-      }
-    }
-
-    function addToCart(selectId) {
-      const selected = document.getElementById(selectId);
-      const itemName = selected.value;
-      if (itemName === "Aucun" || itemName.includes("rupture")) return;
-      const existing = cart.find(i => i.name === itemName);
-      if (existing) {
-        existing.quantity++;
-      } else {
-        cart.push({ name: itemName, quantity: 1 });
-      }
-      updateCart();
-  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
-    }
-
-    function changeQty(index, delta) {
-      cart[index].quantity += delta;
-      if (cart[index].quantity <= 0) cart.splice(index, 1);
-      updateCart();
-  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
-    }
-
-    
-function updateCart() {
-  const container = document.getElementById("cart");
-  container.innerHTML = "";
-
-      cart.forEach((item, index) => {
-        container.innerHTML += `
-          <div class="cart-item">
-            <span>${item.name} x${item.quantity}</span>
-            <div>
-              <button onclick="changeQty(${index}, -1)">-</button>
-              <button onclick="changeQty(${index}, 1)">+</button>
-            </div>
-          </div>`;
-      });
-    }
-
-    function sendOrder() {
-      const name = document.getElementById("clientName").value;
-      if (!name) {
-        alert("Merci de saisir votre prénom.");
-        return;
-      }
-
-      let message = `Commande pour ${name} - Burger Paname :%0A`;
-      cart.forEach(item => {
-        message += `- ${item.name} x${item.quantity}%0A`;
-      });
-
-      const phone = "33616550952";
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-    }
-
-    
-window.onload = () => {
-  const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
-  loadOptions(sheetId, "Burgers", "burger", "label-burger", []);
-  loadOptions(sheetId, "Boissons", "drink", "label-drink", []);
-  loadOptions(sheetId, "Accompagnements", "fries", "label-fries", []);
-  loadOptions(sheetId, "Crudités", "crudites", "label-crudites", []);
-  loadOptions(sheetId, "Desserts", "dessert", "label-dessert", []);
-};
-
-  
-function resetAll() {
-  if (confirm("Es-tu sûr de vouloir réinitialiser toutes les commandes ?")) {
-    cart = [];
-    currentOrder = [];
-    orderNumber = 1;
-    updateCurrentOrder();
-    updateCart();
-  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
-    document.getElementById("clientName").value = "";
-    alert("Commandes réinitialisées.");
-  }
-}
-</script>
-
 </head>
 <body>
-<h1>Burger Paname - Étapes de commande</h1>
-<div id="loading">Chargement du menu...</div>
-<div id="error">Erreur de connexion au menu. Données locales affichées.</div>
+  <h1>Burger Paname - Commande</h1>
 
-<div class="step">
-  <div class="menu-step" id="menu1">
-    <h2 id="label-burger"></h2>
-    <select id="burger"></select>
-    <button onclick="addToCart('burger')">Ajouter</button>
-    <button onclick="validateOrder('menu2')">Valider le Menu 1</button>
+  <div class="step">
+    <div class="section">
+      <select id="product">
+        <option value="Classic Burger - 10€">Classic Burger - 10€</option>
+        <option value="Veggie Burger - 9€">Veggie Burger - 9€</option>
+        <option value="Frites - 3€">Frites - 3€</option>
+        <option value="Coca-Cola - 2€">Coca-Cola - 2€</option>
+      </select>
+      <button onclick="addToCart()">Ajouter</button>
+    </div>
+
+    <div class="section">
+      <h2>Commande en cours</h2>
+      <div id="currentOrder"></div>
+      <button onclick="validateOrder()">Valider la commande</button>
+    </div>
+
+    <div class="section">
+      <h2>Commandes validées</h2>
+      <div id="cart"></div>
+      <p id="total" style="font-weight:bold; text-align:center;"></p>
+    </div>
+
+    <div class="section">
+      <h2>Finalisation</h2>
+      <input type="text" id="clientName" placeholder="Votre prénom" />
+      <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+      <button onclick="resetAll()">Réinitialiser les commandes</button>
+    </div>
   </div>
-
-  <div class="menu-step" id="menu2" style="display:none">
-    <h2 id="label-drink"></h2>
-    <select id="drink"></select>
-    <button onclick="addToCart('drink')">Ajouter</button>
-    <button onclick="validateOrder('menu3')">Valider le Menu 2</button>
-  </div>
-
-  <div class="menu-step" id="menu3" style="display:none">
-    <h2 id="label-fries"></h2>
-    <select id="fries"></select>
-    <button onclick="addToCart('fries')">Ajouter</button>
-    <button onclick="validateOrder('menu4')">Valider le Menu 3</button>
-  </div>
-
-  <div class="menu-step" id="menu4" style="display:none">
-    <h2 id="label-crudites"></h2>
-    <select id="crudites"></select>
-    <button onclick="addToCart('crudites')">Ajouter</button>
-    <button onclick="validateOrder('menu5')">Valider le Menu 4</button>
-  </div>
-
-  <div class="menu-step" id="menu5" style="display:none">
-    <h2 id="label-dessert"></h2>
-    <select id="dessert"></select>
-    <button onclick="addToCart('dessert')">Ajouter</button>
-    <button onclick="validateOrder()">Valider le Menu 5</button>
-    <p id="confirmation" style="display:none; color:green; font-weight:bold; text-align:center;">Commande validée !</p>
-  </div>
-
-  <div class="section">
-    <h2>Commande en cours</h2>
-    <div id="currentOrder"></div>
-
-    <h2>Commandes validées</h2>
-    <div id="cart"></div>
-
-    <h2>Finalisation</h2>
-    <input type="text" id="clientName" placeholder="Votre prénom" />
-    <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
-<button onclick="resetAll()">Réinitialiser les commandes</button>
-  </div>
-</div>
 
 <script>
 let cart = [];
 let currentOrder = [];
 let orderNumber = 1;
 
-function showStep(stepId) {
-  document.querySelectorAll('.menu-step').forEach(div => div.style.display = 'none');
-  document.getElementById(stepId).style.display = 'block';
-}
-
-function addToCart(selectId) {
-  const selected = document.getElementById(selectId);
+function addToCart() {
+  const selected = document.getElementById("product");
   const itemName = selected.value;
-  if (itemName === "Aucun" || itemName.includes("rupture")) return;
-
   const existing = currentOrder.find(i => i.name === itemName);
   if (existing) {
     existing.quantity++;
@@ -249,7 +88,7 @@ function changeQty(index, delta) {
   updateCurrentOrder();
 }
 
-function validateOrder(nextStepId) {
+function validateOrder() {
   if (currentOrder.length === 0) {
     alert("Ajoutez des articles à la commande.");
     return;
@@ -258,21 +97,22 @@ function validateOrder(nextStepId) {
   currentOrder = [];
   updateCurrentOrder();
   updateCart();
-  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
-  if (nextStepId) showStep(nextStepId);
 }
-
 
 function updateCart() {
   const container = document.getElementById("cart");
   container.innerHTML = "";
-
+  let total = 0;
   cart.forEach(order => {
     container.innerHTML += `<h3 style="margin-top: 20px;">Commande #${String(order.orderNumber).padStart(3, "0")}</h3>`;
     order.items.forEach(item => {
+      const priceMatch = item.name.match(/(\d+(\.\d+)?)[€e]?$/);
+      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      total += price * item.quantity;
       container.innerHTML += `<div class="cart-item">${item.name} x${item.quantity}</div>`;
     });
   });
+  document.getElementById("total").textContent = "Total : " + total.toFixed(2) + "€";
 }
 
 function sendOrder() {
@@ -281,30 +121,22 @@ function sendOrder() {
     alert("Merci de saisir votre prénom.");
     return;
   }
-
   let message = `Commande pour ${name} - Burger Paname :%0A`;
+  let total = 0;
   cart.forEach(order => {
-    message += `Commande ${order.orderNumber}:%0A`;
+    message += `Commande #${String(order.orderNumber).padStart(3, "0")}%0A`;
     order.items.forEach(item => {
       message += `- ${item.name} x${item.quantity}%0A`;
+      const priceMatch = item.name.match(/(\d+(\.\d+)?)[€e]?$/);
+      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      total += price * item.quantity;
     });
     message += "%0A";
   });
-
+  message += `Total : ${total.toFixed(2)}€`;
   const phone = "33616550952";
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 }
-
-
-window.onload = () => {
-  const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
-  loadOptions(sheetId, "Burgers", "burger", "label-burger", []);
-  loadOptions(sheetId, "Boissons", "drink", "label-drink", []);
-  loadOptions(sheetId, "Accompagnements", "fries", "label-fries", []);
-  loadOptions(sheetId, "Crudités", "crudites", "label-crudites", []);
-  loadOptions(sheetId, "Desserts", "dessert", "label-dessert", []);
-};
-
 
 function resetAll() {
   if (confirm("Es-tu sûr de vouloir réinitialiser toutes les commandes ?")) {
@@ -313,12 +145,11 @@ function resetAll() {
     orderNumber = 1;
     updateCurrentOrder();
     updateCart();
-  const conf = document.getElementById("confirmation"); if (conf) { conf.style.display = "block"; setTimeout(() => { conf.style.display = "none"; }, 2000); }
     document.getElementById("clientName").value = "";
+    document.getElementById("total").textContent = "";
     alert("Commandes réinitialisées.");
   }
 }
 </script>
-
 </body>
 </html>
