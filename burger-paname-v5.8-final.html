@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Burger Paname V5.8 - Tunnel + Sheets</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f1ee; padding: 20px; color: #333; }
+    h1, h2 { text-align: center; }
+    .step { max-width: 600px; margin: 0 auto; }
+    .section { margin-top: 30px; display: none; }
+    .section.active { display: block; }
+    select, input[type="text"], button {
+      width: 100%; padding: 10px; margin: 10px 0; font-size: 16px;
+    }
+    .cart-item { display: flex; justify-content: space-between; padding: 5px 0; }
+    .cart-item button { padding: 0 8px; }
+    option[disabled] { color: gray; }
+    #loading { text-align: center; font-size: 18px; padding: 20px; display: none; }
+    #error { color: red; text-align: center; display: none; }
+  </style>
+  <script>
+    let cart = [];
+    let stepIndex = 0;
+    const steps = ["burger", "drink", "fries", "crudites", "dessert"];
+
+    async function loadOptions(sheetId, tabName, selectId, labelId) {
+      const url = `https://opensheet.elk.sh/${sheetId}/${tabName}`;
+      const select = document.getElementById(selectId);
+      const label = document.getElementById(labelId);
+      const loading = document.getElementById("loading");
+      const error = document.getElementById("error");
+
+      loading.style.display = "block";
+      select.innerHTML = "";
+      label.textContent = tabName;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        loading.style.display = "none";
+
+        const noneOption = document.createElement("option");
+        noneOption.textContent = "Aucun";
+        noneOption.value = "Aucun";
+        select.appendChild(noneOption);
+
+        data.forEach(item => {
+          const option = document.createElement("option");
+          option.value = item.Nom;
+          if (parseInt(item.Stock) === 0) {
+            option.textContent = `${item.Nom} - ${item.Prix}€ (rupture)`;
+            option.disabled = true;
+          } else {
+            option.textContent = `${item.Nom} - ${item.Prix}€`;
+          }
+          select.appendChild(option);
+        });
+      } catch (e) {
+        loading.style.display = "none";
+        error.style.display = "block";
+        select.innerHTML = "<option disabled>Erreur de chargement</option>";
+      }
+    }
+
+    function goToNextStep(currentStepId) {
+      const selected = document.getElementById(currentStepId);
+      const itemName = selected.value;
+      if (!itemName || itemName === "Aucun" || itemName.includes("rupture")) return;
+
+      const existing = cart.find(i => i.name === itemName);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        cart.push({ name: itemName, quantity: 1 });
+      }
+      updateCart();
+
+      const current = document.getElementById("section-" + currentStepId);
+      current.classList.remove("active");
+
+      stepIndex++;
+      if (stepIndex < steps.length) {
+        const next = document.getElementById("section-" + steps[stepIndex]);
+        next.classList.add("active");
+      }
+    }
+
+    function changeQty(index, delta) {
+      cart[index].quantity += delta;
+      if (cart[index].quantity <= 0) cart.splice(index, 1);
+      updateCart();
+    }
+
+    function updateCart() {
+      const container = document.getElementById("cart");
+      container.innerHTML = "";
+      cart.forEach((item, index) => {
+        container.innerHTML += `
+          <div class="cart-item">
+            <span>${item.name} x${item.quantity}</span>
+            <div>
+              <button onclick="changeQty(${index}, -1)">-</button>
+              <button onclick="changeQty(${index}, 1)">+</button>
+            </div>
+          </div>`;
+      });
+    }
+
+    function sendOrder() {
+      const name = document.getElementById("clientName").value;
+      if (!name) {
+        alert("Merci de saisir votre prénom.");
+        return;
+      }
+
+      let message = `Commande pour ${name} - Burger Paname :%0A`;
+      cart.forEach(item => {
+        message += `- ${item.name} x${item.quantity}%0A`;
+      });
+
+      const phone = "33616550952";
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    }
+
+    window.onload = () => {
+      const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
+      loadOptions(sheetId, "Burgers", "burger", "label-burger");
+      loadOptions(sheetId, "Boissons", "drink", "label-drink");
+      loadOptions(sheetId, "Accompagnements", "fries", "label-fries");
+      loadOptions(sheetId, "Crudités", "crudites", "label-crudites");
+      loadOptions(sheetId, "Desserts", "dessert", "label-dessert");
+      document.getElementById("section-burger").classList.add("active");
+    };
+  </script>
+</head>
+<body>
+  <h1>Burger Paname - V5.8</h1>
+  <div id="loading">Chargement du menu...</div>
+  <div id="error">Erreur de connexion. Vérifiez la configuration du menu Google Sheets.</div>
+  <div class="step">
+    <div id="section-burger" class="section">
+      <h2 id="label-burger"></h2>
+      <select id="burger"></select>
+      <button onclick="goToNextStep('burger')">Ajouter au panier</button>
+    </div>
+    <div id="section-drink" class="section">
+      <h2 id="label-drink"></h2>
+      <select id="drink"></select>
+      <button onclick="goToNextStep('drink')">Ajouter au panier</button>
+    </div>
+    <div id="section-fries" class="section">
+      <h2 id="label-fries"></h2>
+      <select id="fries"></select>
+      <button onclick="goToNextStep('fries')">Ajouter au panier</button>
+    </div>
+    <div id="section-crudites" class="section">
+      <h2 id="label-crudites"></h2>
+      <select id="crudites"></select>
+      <button onclick="goToNextStep('crudites')">Ajouter au panier</button>
+    </div>
+    <div id="section-dessert" class="section">
+      <h2 id="label-dessert"></h2>
+      <select id="dessert"></select>
+      <button onclick="goToNextStep('dessert')">Ajouter au panier</button>
+    </div>
+
+    <h2>Panier</h2>
+    <div id="cart"></div>
+
+    <h2>Finalisation</h2>
+    <input type="text" id="clientName" placeholder="Votre prénom" />
+    <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+  </div>
+</body>
+</html>
