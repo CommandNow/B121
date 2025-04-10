@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -117,8 +116,8 @@ function updateCart() {
 
 function sendOrder() {
   const name = document.getElementById("clientName").value;
-  if (!name) {
-    alert("Merci de saisir votre prénom.");
+  if (!name || name.length < 2) {
+    alert("Merci d’entrer un prénom valide (au moins 2 lettres).");
     return;
   }
   let message = `Commande pour ${name} - Burger Paname :%0A`;
