@@ -180,12 +180,102 @@
       <button onclick="addToCart('dessert')">Ajouter au panier</button>
     </div>
 
-    <h2>Panier</h2>
-    <div id="cart"></div>
+    
+<h2>Commande en cours</h2>
+<div id="currentOrder"></div>
+<button onclick="validateOrder()">Valider cette commande</button>
 
-    <h2>Finalisation</h2>
-    <input type="text" id="clientName" placeholder="Votre prénom" />
-    <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+<h2>Commandes validées</h2>
+<div id="cart"></div>
+
+<h2>Finalisation</h2>
+<input type="text" id="clientName" placeholder="Votre prénom" />
+<button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+
   </div>
+
+<script>
+let cart = [];
+let currentOrder = [];
+let orderNumber = 1;
+
+function addToCart(selectId) {
+  const selected = document.getElementById(selectId);
+  const itemName = selected.value;
+  if (itemName === "Aucun" || itemName.includes("rupture")) return;
+
+  const existing = currentOrder.find(i => i.name === itemName);
+  if (existing) {
+    existing.quantity++;
+  } else {
+    currentOrder.push({ name: itemName, quantity: 1 });
+  }
+  updateCurrentOrder();
+}
+
+function updateCurrentOrder() {
+  const container = document.getElementById("currentOrder");
+  container.innerHTML = "";
+  currentOrder.forEach((item, index) => {
+    container.innerHTML += `
+      <div class="cart-item">
+        <span>${item.name} x${item.quantity}</span>
+        <div>
+          <button onclick="changeQty(${index}, -1)">-</button>
+          <button onclick="changeQty(${index}, 1)">+</button>
+        </div>
+      </div>`;
+  });
+}
+
+function changeQty(index, delta) {
+  currentOrder[index].quantity += delta;
+  if (currentOrder[index].quantity <= 0) currentOrder.splice(index, 1);
+  updateCurrentOrder();
+}
+
+function validateOrder() {
+  if (currentOrder.length === 0) {
+    alert("Ajoutez des articles à la commande.");
+    return;
+  }
+  cart.push({ orderNumber: orderNumber++, items: [...currentOrder] });
+  currentOrder = [];
+  updateCurrentOrder();
+  updateCart();
+}
+
+function updateCart() {
+  const container = document.getElementById("cart");
+  container.innerHTML = "";
+  cart.forEach(order => {
+    container.innerHTML += `<h3 style="margin-top: 20px;">Commande ${order.orderNumber}</h3>`;
+    order.items.forEach(item => {
+      container.innerHTML += `<div class="cart-item">${item.name} x${item.quantity}</div>`;
+    });
+  });
+}
+
+function sendOrder() {
+  const name = document.getElementById("clientName").value;
+  if (!name) {
+    alert("Merci de saisir votre prénom.");
+    return;
+  }
+
+  let message = `Commande pour ${name} - Burger Paname :%0A`;
+  cart.forEach(order => {
+    message += `Commande ${order.orderNumber}:%0A`;
+    order.items.forEach(item => {
+      message += `- ${item.name} x${item.quantity}%0A`;
+    });
+    message += "%0A";
+  });
+
+  const phone = "33616550952";
+  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+}
+</script>
+
 </body>
 </html>
