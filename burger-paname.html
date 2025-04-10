@@ -87,9 +87,11 @@
       updateCart();
     }
 
-    function updateCart() {
-      const container = document.getElementById("cart");
-      container.innerHTML = "";
+    
+function updateCart() {
+  const container = document.getElementById("cart");
+  container.innerHTML = "";
+
       cart.forEach((item, index) => {
         container.innerHTML += `
           <div class="cart-item">
@@ -118,30 +120,30 @@
       window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
     }
 
-    window.onload = () => {
-      const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
-      loadOptions(sheetId, "Burgers", "burger", "label-burger", [
-        { nom: "Classic Burger", prix: 10, stock: 1 },
-        { nom: "Veggie Burger", prix: 9, stock: 0 }
-      ]);
-      loadOptions(sheetId, "Boissons", "drink", "label-drink", [
-        { nom: "Coca-Cola", prix: 2, stock: 1 },
-        { nom: "Fanta", prix: 2, stock: 1 }
-      ]);
-      loadOptions(sheetId, "Accompagnements", "fries", "label-fries", [
-        { nom: "Frites", prix: 3, stock: 1 },
-        { nom: "PDT sautées", prix: 3.5, stock: 1 }
-      ]);
-      loadOptions(sheetId, "Crudités", "crudites", "label-crudites", [
-        { nom: "Salade", prix: 0, stock: 1 },
-        { nom: "Tomates", prix: 0, stock: 1 }
-      ]);
-      loadOptions(sheetId, "Desserts", "dessert", "label-dessert", [
-        { nom: "Cookie", prix: 2, stock: 1 },
-        { nom: "Brownie", prix: 3.5, stock: 0 }
-      ]);
-    };
-  </script>
+    
+window.onload = () => {
+  const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
+  loadOptions(sheetId, "Burgers", "burger", "label-burger", []);
+  loadOptions(sheetId, "Boissons", "drink", "label-drink", []);
+  loadOptions(sheetId, "Accompagnements", "fries", "label-fries", []);
+  loadOptions(sheetId, "Crudités", "crudites", "label-crudites", []);
+  loadOptions(sheetId, "Desserts", "dessert", "label-dessert", []);
+};
+
+  
+function resetAll() {
+  if (confirm("Es-tu sûr de vouloir réinitialiser toutes les commandes ?")) {
+    cart = [];
+    currentOrder = [];
+    orderNumber = 1;
+    updateCurrentOrder();
+    updateCart();
+    document.getElementById("clientName").value = "";
+    alert("Commandes réinitialisées.");
+  }
+}
+</script>
+
 </head>
 <body>
 <h1>Burger Paname - Étapes de commande</h1>
@@ -194,6 +196,7 @@
     <h2>Finalisation</h2>
     <input type="text" id="clientName" placeholder="Votre prénom" />
     <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+<button onclick="resetAll()">Réinitialiser les commandes</button>
   </div>
 </div>
 
@@ -254,9 +257,11 @@ function validateOrder(nextStepId) {
   if (nextStepId) showStep(nextStepId);
 }
 
+
 function updateCart() {
   const container = document.getElementById("cart");
   container.innerHTML = "";
+
   cart.forEach(order => {
     container.innerHTML += `<h3 style="margin-top: 20px;">Commande #${String(order.orderNumber).padStart(3, "0")}</h3>`;
     order.items.forEach(item => {
@@ -274,7 +279,7 @@ function sendOrder() {
 
   let message = `Commande pour ${name} - Burger Paname :%0A`;
   cart.forEach(order => {
-    message += `Commande #${String(order.orderNumber).padStart(3, "0")}:%0A`;
+    message += `Commande ${order.orderNumber}:%0A`;
     order.items.forEach(item => {
       message += `- ${item.name} x${item.quantity}%0A`;
     });
@@ -285,6 +290,7 @@ function sendOrder() {
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 }
 
+
 window.onload = () => {
   const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
   loadOptions(sheetId, "Burgers", "burger", "label-burger", []);
@@ -293,6 +299,20 @@ window.onload = () => {
   loadOptions(sheetId, "Crudités", "crudites", "label-crudites", []);
   loadOptions(sheetId, "Desserts", "dessert", "label-dessert", []);
 };
+
+
+function resetAll() {
+  if (confirm("Es-tu sûr de vouloir réinitialiser toutes les commandes ?")) {
+    cart = [];
+    currentOrder = [];
+    orderNumber = 1;
+    updateCurrentOrder();
+    updateCart();
+    document.getElementById("clientName").value = "";
+    alert("Commandes réinitialisées.");
+  }
+}
 </script>
+
 </body>
 </html>
