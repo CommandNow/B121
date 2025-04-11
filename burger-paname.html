@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Burger Paname V5.6 - Total</title>
+  <title>Burger Paname</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f5f0; padding: 20px; color: #333; }
     h1, h2, h3 { text-align: center; }
@@ -44,9 +44,9 @@
     <div class="section">
       <h2>Finalisation</h2>
       <input type="text" id="clientName" placeholder="Votre prénom" />
-    <p id="nameError" style="color:red; text-align:center; display:none;">Merci d’entrer un prénom valide (au moins 2 lettres).</p>
+      <p id="nameError" style="color:red; display:none; text-align:center;">Merci d’entrer un prénom valide (au moins 2 lettres).</p>
+      <p id="cartError" style="color:red; display:none; text-align:center;">Merci de valider au moins une commande avant d’envoyer.</p>
       <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
-    <p id="cartError" style="color:red; text-align:center; display:none;">Merci de valider au moins une commande avant d’envoyer.</p>
       <button onclick="resetAll()">Réinitialiser les commandes</button>
     </div>
   </div>
@@ -117,38 +117,45 @@ function updateCart() {
 }
 
 function sendOrder() {
-  if (cart.length === 0) {
-    document.getElementById("cartError").style.display = "block";
+  const name = document.getElementById("clientName").value;
+  const nameError = document.getElementById("nameError");
+  const cartError = document.getElementById("cartError");
+
+  if (!name || name.length < 2) {
+    nameError.style.display = "block";
     return;
   } else {
-    document.getElementById("cartError").style.display = "none";
+    nameError.style.display = "none";
   }
-  const name = document.getElementById("clientName").value;
-  if (!name || name.length < 2) {
-    document.getElementById("nameError").style.display = "block";
-    // Erreur visible affichée
+
+  if (cart.length === 0) {
+    cartError.style.display = "block";
     return;
+  } else {
+    cartError.style.display = "none";
   }
-  document.getElementById("nameError").style.display = "none";
+
   let message = `Commande pour ${name} - Burger Paname :%0A`;
   let total = 0;
+
   cart.forEach(order => {
     message += `Commande #${String(order.orderNumber).padStart(3, "0")}%0A`;
     order.items.forEach(item => {
-      message += `- ${item.name} x${item.quantity}%0A`;
       const priceMatch = item.name.match(/(\d+(\.\d+)?)[€e]?$/);
       const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
       total += price * item.quantity;
+      message += `- ${item.name} x${item.quantity}%0A`;
     });
     message += "%0A";
   });
+
   message += `Total : ${total.toFixed(2)}€`;
   const phone = "33616550952";
-  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
 }
 
 function resetAll() {
-  if (confirm("Es-tu sûr de vouloir réinitialiser toutes les commandes ?")) {
+  if (confirm("Réinitialiser toutes les commandes ?")) {
     cart = [];
     currentOrder = [];
     orderNumber = 1;
@@ -156,6 +163,8 @@ function resetAll() {
     updateCart();
     document.getElementById("clientName").value = "";
     document.getElementById("total").textContent = "";
+    document.getElementById("nameError").style.display = "none";
+    document.getElementById("cartError").style.display = "none";
     alert("Commandes réinitialisées.");
   }
 }
