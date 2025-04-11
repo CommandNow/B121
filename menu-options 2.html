@@ -1,1 +1,222 @@
-<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Menu dynamique</title></head><body><h1>Chargement dynamique basé sur NombreChoix</h1></body></html>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Menu Personnalisé Intelligent</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f5f0; color: #333; padding: 20px; }
+    h1, h2, h3 { text-align: center; }
+    .section { max-width: 600px; margin: 0 auto 30px; }
+    .option-block { margin-top: 20px; }
+    .option-block label { display: block; margin: 5px 0; }
+    select, input[type="checkbox"], button {
+      padding: 10px;
+      margin: 8px 0;
+      font-size: 16px;
+      width: 100%;
+    }
+    .cart-item { display: flex; justify-content: space-between; padding: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>Menu Personnalisé</h1>
+
+  <div class="section" id="menuContainer"></div>
+
+  <div class="section">
+    <button onclick="addToCart()">Ajouter au panier</button>
+  </div>
+
+  <div class="section">
+    <h2>Commande en cours</h2>
+    <div id="currentOrder"></div>
+    <button onclick="validateOrder()">Valider la commande</button>
+  </div>
+
+  <div class="section">
+    <h2>Commandes validées</h2>
+    <div id="cart"></div>
+    <p id="total" style="font-weight: bold; text-align: center;"></p>
+  </div>
+
+  <div class="section">
+    <h2>Finalisation</h2>
+    <input type="text" id="clientName" placeholder="Votre prénom" />
+    <p id="nameError" style="color:red; display:none; text-align:center;">Merci d’entrer un prénom valide.</p>
+    <p id="cartError" style="color:red; display:none; text-align:center;">Merci de valider une commande avant d’envoyer.</p>
+    <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+  </div>
+
+<script>
+let cart = [];
+let currentOrder = [];
+let orderNumber = 1;
+
+const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
+const sheetUrl = `https://opensheet.elk.sh/${sheetId}/menu`;
+
+function groupByCategory(data) {
+  const result = {};
+  data.forEach(item => {
+    if (!result[item.Catégorie]) {
+      result[item.Catégorie] = { NombreChoix: parseInt(item.NombreChoix || "1"), items: [] };
+    }
+    result[item.Catégorie].items.push(item);
+  });
+  return result;
+}
+
+function loadMenu() {
+  fetch(sheetUrl)
+    .then(res => res.json())
+    .then(data => {
+      const grouped = groupByCategory(data);
+      const container = document.getElementById("menuContainer");
+
+      Object.entries(grouped).forEach(([cat, group]) => {
+        const block = document.createElement("div");
+        block.classList.add("option-block");
+        const title = document.createElement("h3");
+        title.textContent = cat;
+        block.appendChild(title);
+
+        if (group.NombreChoix === 1) {
+          const select = document.createElement("select");
+          select.name = cat;
+          group.items.forEach(item => {
+            const opt = document.createElement("option");
+            opt.value = `${item.Nom} - ${item.Prix}€`;
+            opt.textContent = `${item.Nom} - ${item.Prix}€`;
+            select.appendChild(opt);
+          });
+          block.appendChild(select);
+        } else {
+          group.items.forEach((item, i) => {
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.name = cat;
+            checkbox.value = `${item.Nom} - ${item.Prix}€`;
+            checkbox.id = `${cat}_${i}`;
+
+            checkbox.addEventListener("change", () => {
+              const all = document.querySelectorAll(`input[name='${cat}']`);
+              const checked = Array.from(all).filter(i => i.checked);
+              if (checked.length > group.NombreChoix) {
+                checkbox.checked = false;
+                alert(`Vous pouvez choisir ${group.NombreChoix} option(s) max dans ${cat}`);
+              }
+            });
+
+            const label = document.createElement("label");
+            label.htmlFor = checkbox.id;
+            label.textContent = item.Nom;
+
+            block.appendChild(checkbox);
+            block.appendChild(label);
+          });
+        }
+        container.appendChild(block);
+      });
+    });
+}
+
+function addToCart() {
+  const selects = document.querySelectorAll("select");
+  selects.forEach(sel => {
+    if (sel.value) {
+      currentOrder.push({ name: sel.value, quantity: 1 });
+    }
+  });
+
+  const checkboxes = document.querySelectorAll("input[type='checkbox']:checked");
+  checkboxes.forEach(cb => {
+    currentOrder.push({ name: cb.value, quantity: 1 });
+  });
+
+  updateCurrentOrder();
+}
+
+function updateCurrentOrder() {
+  const container = document.getElementById("currentOrder");
+  container.innerHTML = "";
+  currentOrder.forEach((item, index) => {
+    container.innerHTML += `
+      <div class="cart-item">
+        <span>${item.name} x${item.quantity}</span>
+        <div>
+          <button onclick="changeQty(${index}, -1)">-</button>
+          <button onclick="changeQty(${index}, 1)">+</button>
+        </div>
+      </div>`;
+  });
+}
+
+function changeQty(index, delta) {
+  currentOrder[index].quantity += delta;
+  if (currentOrder[index].quantity <= 0) currentOrder.splice(index, 1);
+  updateCurrentOrder();
+}
+
+function validateOrder() {
+  if (currentOrder.length === 0) return;
+  cart.push({ orderNumber: orderNumber++, items: [...currentOrder] });
+  currentOrder = [];
+  updateCurrentOrder();
+  updateCart();
+}
+
+function updateCart() {
+  const container = document.getElementById("cart");
+  container.innerHTML = "";
+  let total = 0;
+  cart.forEach(order => {
+    container.innerHTML += `<h3>Commande #${String(order.orderNumber).padStart(3, "0")}</h3>`;
+    order.items.forEach(item => {
+      const match = item.name.match(/(\d+(\.\d+)?)/);
+      const price = match ? parseFloat(match[1]) : 0;
+      total += price * item.quantity;
+      container.innerHTML += `<div>${item.name} x${item.quantity}</div>`;
+    });
+  });
+  document.getElementById("total").textContent = "Total : " + total.toFixed(2) + "€";
+}
+
+function sendOrder() {
+  const name = document.getElementById("clientName").value;
+  if (!name || name.length < 2) {
+    document.getElementById("nameError").style.display = "block";
+    return;
+  } else {
+    document.getElementById("nameError").style.display = "none";
+  }
+
+  if (cart.length === 0) {
+    document.getElementById("cartError").style.display = "block";
+    return;
+  } else {
+    document.getElementById("cartError").style.display = "none";
+  }
+
+  let message = `Commande pour ${name} - Menu :\n`;
+  let total = 0;
+  cart.forEach(order => {
+    message += `Commande #${String(order.orderNumber).padStart(3, "0")}\n`;
+    order.items.forEach(item => {
+      const match = item.name.match(/(\d+(\.\d+)?)/);
+      const price = match ? parseFloat(match[1]) : 0;
+      total += price * item.quantity;
+      message += `- ${item.name} x${item.quantity}\n`;
+    });
+    message += "\n";
+  });
+  message += `Total : ${total.toFixed(2)}€`;
+
+  const phone = "33616550952";
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+}
+
+window.onload = loadMenu;
+</script>
+</body>
+</html>
