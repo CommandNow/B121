@@ -3,12 +3,11 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Burger Paname</title>
+  <title>Burger Paname - Menu connecté</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f5f0; padding: 20px; color: #333; }
     h1, h2, h3 { text-align: center; }
-    .step { max-width: 600px; margin: 0 auto; }
-    .section { margin-top: 30px; }
+    .section { max-width: 600px; margin: 20px auto; }
     select, input[type="text"], button {
       width: 100%; padding: 10px; margin: 10px 0; font-size: 16px;
     }
@@ -17,39 +16,49 @@
   </style>
 </head>
 <body>
-  <h1>Burger Paname - Commande</h1>
+  <h1>Burger Paname - Menu Connecté</h1>
 
-  <div class="step">
-    <div class="section">
-      <select id="product">
-        <option value="Classic Burger - 10€">Classic Burger - 10€</option>
-        <option value="Veggie Burger - 9€">Veggie Burger - 9€</option>
-        <option value="Frites - 3€">Frites - 3€</option>
-        <option value="Coca-Cola - 2€">Coca-Cola - 2€</option>
-      </select>
-      <button onclick="addToCart()">Ajouter</button>
-    </div>
+  <div class="section" id="menuSection">
+    <h2 id="label-burger">Burgers</h2>
+    <select id="burger"></select>
+    <button onclick="addToCart('burger')">Ajouter</button>
 
-    <div class="section">
-      <h2>Commande en cours</h2>
-      <div id="currentOrder"></div>
-      <button onclick="validateOrder()">Valider la commande</button>
-    </div>
+    <h2 id="label-drink">Boissons</h2>
+    <select id="drink"></select>
+    <button onclick="addToCart('drink')">Ajouter</button>
 
-    <div class="section">
-      <h2>Commandes validées</h2>
-      <div id="cart"></div>
-      <p id="total" style="font-weight:bold; text-align:center;"></p>
-    </div>
+    <h2 id="label-fries">Accompagnements</h2>
+    <select id="fries"></select>
+    <button onclick="addToCart('fries')">Ajouter</button>
 
-    <div class="section">
-      <h2>Finalisation</h2>
-      <input type="text" id="clientName" placeholder="Votre prénom" />
-      <p id="nameError" style="color:red; display:none; text-align:center;">Merci d’entrer un prénom valide (au moins 2 lettres).</p>
-      <p id="cartError" style="color:red; display:none; text-align:center;">Merci de valider au moins une commande avant d’envoyer.</p>
-      <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
-      <button onclick="resetAll()">Réinitialiser les commandes</button>
-    </div>
+    <h2 id="label-crudites">Crudités</h2>
+    <select id="crudites"></select>
+    <button onclick="addToCart('crudites')">Ajouter</button>
+
+    <h2 id="label-dessert">Desserts</h2>
+    <select id="dessert"></select>
+    <button onclick="addToCart('dessert')">Ajouter</button>
+  </div>
+
+  <div class="section">
+    <h2>Commande en cours</h2>
+    <div id="currentOrder"></div>
+    <button onclick="validateOrder()">Valider la commande</button>
+  </div>
+
+  <div class="section">
+    <h2>Commandes validées</h2>
+    <div id="cart"></div>
+    <p id="total" style="font-weight:bold; text-align:center;"></p>
+  </div>
+
+  <div class="section">
+    <h2>Finalisation</h2>
+    <input type="text" id="clientName" placeholder="Votre prénom" />
+    <p id="nameError" style="color:red; display:none; text-align:center;">Merci d’entrer un prénom valide.</p>
+    <p id="cartError" style="color:red; display:none; text-align:center;">Merci de valider une commande avant d’envoyer.</p>
+    <button onclick="sendOrder()">Envoyer sur WhatsApp</button>
+    <button onclick="resetAll()">Réinitialiser</button>
   </div>
 
 <script>
@@ -57,44 +66,63 @@ let cart = [];
 let currentOrder = [];
 let orderNumber = 1;
 
-function addToCart() {
-  const selected = document.getElementById("product");
-  const itemName = selected.value;
+// Chargement dynamique depuis Google Sheets
+const sheetId = "123Ozq3ba7_E2PZe_vunBQsOI18rcNAahhEAK8QaYd7M";
+const baseUrl = `https://opensheet.elk.sh/${sheetId}`;
+
+function loadOptions(tab, selectId, labelId) {
+  fetch(`${baseUrl}/${tab}`)
+    .then(res => res.json())
+    .then(data => {
+      const select = document.getElementById(selectId);
+      const label = document.getElementById(labelId);
+      label.textContent = tab;
+      data.forEach(item => {
+        if (item.Stock && parseInt(item.Stock) <= 0) {
+          select.innerHTML += `<option disabled>${item.Nom} - Rupture</option>`;
+        } else {
+          select.innerHTML += `<option>${item.Nom} - ${item.Prix}€</option>`;
+        }
+      });
+    })
+    .catch(() => {
+      document.getElementById(labelId).textContent = tab + " (erreur de chargement)";
+    });
+}
+
+function addToCart(selectId) {
+  const select = document.getElementById(selectId);
+  const itemName = select.value;
+  if (!itemName || itemName.includes("Rupture")) return;
   const existing = currentOrder.find(i => i.name === itemName);
-  if (existing) {
-    existing.quantity++;
-  } else {
-    currentOrder.push({ name: itemName, quantity: 1 });
-  }
+  if (existing) existing.quantity++;
+  else currentOrder.push({ name: itemName, quantity: 1 });
   updateCurrentOrder();
 }
 
 function updateCurrentOrder() {
   const container = document.getElementById("currentOrder");
   container.innerHTML = "";
-  currentOrder.forEach((item, index) => {
+  currentOrder.forEach((item, i) => {
     container.innerHTML += `
       <div class="cart-item">
         <span>${item.name} x${item.quantity}</span>
         <div>
-          <button onclick="changeQty(${index}, -1)">-</button>
-          <button onclick="changeQty(${index}, 1)">+</button>
+          <button onclick="changeQty(${i}, -1)">-</button>
+          <button onclick="changeQty(${i}, 1)">+</button>
         </div>
       </div>`;
   });
 }
 
-function changeQty(index, delta) {
-  currentOrder[index].quantity += delta;
-  if (currentOrder[index].quantity <= 0) currentOrder.splice(index, 1);
+function changeQty(i, delta) {
+  currentOrder[i].quantity += delta;
+  if (currentOrder[i].quantity <= 0) currentOrder.splice(i, 1);
   updateCurrentOrder();
 }
 
 function validateOrder() {
-  if (currentOrder.length === 0) {
-    alert("Ajoutez des articles à la commande.");
-    return;
-  }
+  if (currentOrder.length === 0) return;
   cart.push({ orderNumber: orderNumber++, items: [...currentOrder] });
   currentOrder = [];
   updateCurrentOrder();
@@ -106,12 +134,12 @@ function updateCart() {
   container.innerHTML = "";
   let total = 0;
   cart.forEach(order => {
-    container.innerHTML += `<h3 style="margin-top: 20px;">Commande #${String(order.orderNumber).padStart(3, "0")}</h3>`;
+    container.innerHTML += `<h3>Commande #${String(order.orderNumber).padStart(3, "0")}</h3>`;
     order.items.forEach(item => {
-      const priceMatch = item.name.match(/(\d+(\.\d+)?)[€e]?$/);
-      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      const match = item.name.match(/(\d+(\.\d+)?)/);
+      const price = match ? parseFloat(match[1]) : 0;
       total += price * item.quantity;
-      container.innerHTML += `<div class="cart-item">${item.name} x${item.quantity}</div>`;
+      container.innerHTML += `<div>${item.name} x${item.quantity}</div>`;
     });
   });
   document.getElementById("total").textContent = "Total : " + total.toFixed(2) + "€";
@@ -119,60 +147,56 @@ function updateCart() {
 
 function sendOrder() {
   const name = document.getElementById("clientName").value;
-  const nameError = document.getElementById("nameError");
-  const cartError = document.getElementById("cartError");
-
   if (!name || name.length < 2) {
-    nameError.style.display = "block";
+    document.getElementById("nameError").style.display = "block";
     return;
   } else {
-    nameError.style.display = "none";
+    document.getElementById("nameError").style.display = "none";
   }
 
   if (cart.length === 0) {
-    cartError.style.display = "block";
+    document.getElementById("cartError").style.display = "block";
     return;
   } else {
-    cartError.style.display = "none";
+    document.getElementById("cartError").style.display = "none";
   }
 
-  let message = `Commande pour ${name} - Burger Paname :
-`;
+  let message = `Commande pour ${name} - Burger Paname :\n`;
   let total = 0;
-
   cart.forEach(order => {
-    message += `Commande #${String(order.orderNumber).padStart(3, "0")}
-`;
+    message += `Commande #${String(order.orderNumber).padStart(3, "0")}\n`;
     order.items.forEach(item => {
-      const priceMatch = item.name.match(/(\d+(\.\d+)?)[€e]?$/);
-      const price = priceMatch ? parseFloat(priceMatch[1]) : 0;
+      const match = item.name.match(/(\d+(\.\d+)?)/);
+      const price = match ? parseFloat(match[1]) : 0;
       total += price * item.quantity;
-      message += `- ${item.name} x${item.quantity}
-`;
+      message += `- ${item.name} x${item.quantity}\n`;
     });
-    message += "
-";
+    message += "\n";
   });
-
   message += `Total : ${total.toFixed(2)}€`;
   const phone = "33616550952";
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
 }
 
 function resetAll() {
-  if (confirm("Réinitialiser toutes les commandes ?")) {
-    cart = [];
-    currentOrder = [];
-    orderNumber = 1;
-    updateCurrentOrder();
-    updateCart();
-    document.getElementById("clientName").value = "";
-    document.getElementById("total").textContent = "";
-    document.getElementById("nameError").style.display = "none";
-    document.getElementById("cartError").style.display = "none";
-    alert("Commandes réinitialisées.");
-  }
+  cart = [];
+  currentOrder = [];
+  orderNumber = 1;
+  updateCart();
+  updateCurrentOrder();
+  document.getElementById("clientName").value = "";
+  document.getElementById("total").textContent = "";
+  document.getElementById("nameError").style.display = "none";
+  document.getElementById("cartError").style.display = "none";
 }
+
+window.onload = () => {
+  loadOptions("Burgers", "burger", "label-burger");
+  loadOptions("Boissons", "drink", "label-drink");
+  loadOptions("Accompagnements", "fries", "label-fries");
+  loadOptions("Crudités", "crudites", "label-crudites");
+  loadOptions("Desserts", "dessert", "label-dessert");
+};
 </script>
 </body>
 </html>
